@@ -68,7 +68,7 @@ Start the server
 
 ## Feedback
 
-If you have any feedback, please reach out to us at muhammadalibtt143@gmail.com
+If you have any feedback, please reach out to us at muhammadalibutt143@gmail.com
 
 
 
