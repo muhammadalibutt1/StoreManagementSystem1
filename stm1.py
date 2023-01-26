@@ -1,6 +1,5 @@
 import sys
 import csv
-
 import keyboard
 from tabulate import tabulate
 
@@ -16,6 +15,51 @@ class Store:
         Store.all.append(self)
 
     @classmethod
+    def available_product(cls):
+        type3 = ''
+        try:
+            type3 = int(input("We have two types of products available :\n\t"
+                              "1. Phones\n\t"
+                              "2. Accessories\n\t"
+                              "3. Main Menu\n\t"
+                              "4. Exit\n"
+                              "Enter your choice: "))
+        except ValueError:
+            print("Invalid input. Only Numeric value is allowed.")
+            cls.available_product()
+        rows = []
+        if type3 == 1:
+            with open('user_input.csv', 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    rows.append(row)
+
+            # Use filter function to filter rows with age 21
+            phone_filter = list(filter(lambda x: x["Category"] == "phone", rows))
+            print(tabulate(phone_filter, headers='keys', tablefmt="fancy_grid", colalign=("left",)))
+            while True:
+                event = keyboard.read_event()
+                if event.event_type == 'down' and event.name == 'esc':
+                    cls.available_product()
+        elif type3 == 2:
+            with open('user_input.csv', 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    rows.append(row)
+
+            # Use filter function
+            accessories_filter = list(filter(lambda x: x["Category"] == "accessories", rows))
+            print(tabulate(accessories_filter, headers='keys', tablefmt="fancy_grid", colalign=("left",)))
+
+        elif type3 == 3:
+            Buyer.owner()
+        elif type3 == 4:
+            sys.exit()
+        else:
+            print("\nInvalid input. Please enter the above mentioned number...!\n")
+            cls.available_product()
+
+    @classmethod
     def add_product(cls):
         print("\n******** We have following Products are available in our Store ********")
         rows = []
@@ -29,26 +73,35 @@ class Store:
         rows = []
         product = True
         while product:
-            productid = int(input("Enter the productid: "))
-            name = input("Enter a name: ")
-            price = int(input("Enter the price: "))
-            quantity = int(input("Enter the quantity: "))
-            category = input("Enter a category: ")
-            want = input("Do you want add more Products Y/N ? ")
-            if want == "n" or want == "N":
-                product = False
+            try:
+                productid = int(input("Enter the productid: "))
+                Store.check_product_id(productid)
+            # except:
+            #     print("Invalid input...")
 
-            Store.check_product_id(productid)
 
-            rows.append(
-                {"Name": name, "Price": price, "Quantity": quantity, "Category": category, "Productid": productid})
+                name = input("Enter a name: ")
+                price = int(input("Enter the price: "))
+                quantity = int(input("Enter the quantity: "))
+                category = input("Enter a category: ")
 
+                rows.append(
+                    {"Name": name, "Price": price, "Quantity": quantity, "Category": category, "Productid": productid})
+            except ValueError:
+                print("invalid input")
+                cls.add_product()
             with open("user_input.csv", "a", newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=header)
                 if f.tell() == 0:
                     writer.writeheader()
                 writer.writerows(rows)
                 rows = []
+            want = input("\nDo you want add more Products Y/N ? ")
+            if want == "n" or want == "N":
+                break
+            else:
+                cls.add_product()
+        cls.another()
 
     @classmethod
     def check_product_id(cls, idd):
@@ -69,7 +122,20 @@ class Store:
         print(tabulate(rows, headers='keys', tablefmt="fancy_grid", colalign=("left",)))
 
         product_id = input("Enter Product ID: ")
-        new_quantity = int(input("Enter Quantity to add: "))
+        with open('user_input.csv', 'r') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[0] == str(product_id):
+                    try:
+                        new_quantity = int(input("Enter Quantity to add: "))
+                    except:
+                        print("Invalid input....!")
+                        cls.update_product_quantity()
+                    break
+            if row[0] != str(product_id):
+                print("Product ID not found.Please try existing ID")
+                cls.update_product_quantity()
+
         # reading csv file
         with open('user_input.csv', "r") as file:
             reader = csv.DictReader(file)
@@ -88,6 +154,7 @@ class Store:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
+        cls.another()
 
     @classmethod
     def remove_product_quantity(cls):
@@ -99,7 +166,19 @@ class Store:
         print(tabulate(rows, headers='keys', tablefmt="fancy_grid", colalign=("left",)))
 
         product_id = input("Enter Product ID: ")
-        new_quantity = int(input("Enter Quantity to remove: "))
+        with open('user_input.csv', 'r') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[0] == str(product_id):
+                    try:
+                        new_quantity = int(input("Enter Quantity to remove: "))
+                    except:
+                        print("Invalid input....!")
+                        cls.remove_product_quantity()
+                    break
+            if row[0] != str(product_id):
+                print("Product ID not found.Please try existing ID")
+                cls.remove_product_quantity()
         # reading csv file
         with open('user_input.csv', "r") as file:
             reader = csv.DictReader(file)
@@ -118,6 +197,7 @@ class Store:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
+        cls.another()
 
     @classmethod
     def update_product_price(cls):
@@ -129,7 +209,21 @@ class Store:
         print(tabulate(rows, headers='keys', tablefmt="fancy_grid", colalign=("left",)))
 
         product_id = input("Enter Product ID: ")
-        new_price = int(input("Enter New Price: "))
+        with open('user_input.csv', 'r') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[0] == str(product_id):
+                    try:
+                        new_price = int(input("Enter New Price: "))
+                    except:
+                        print("Invalid input")
+                        cls.update_product_price()
+                    break
+            if row[0] != str(product_id):
+                print("Product ID not found.Please try existing ID")
+                cls.update_product_price()
+            # elif type(new_price) == int:
+            #     cls.update_product_price()
         # reading csv file
         with open('user_input.csv', "r") as file:
             reader = csv.DictReader(file)
@@ -140,7 +234,7 @@ class Store:
                 price = row["Price"]
                 price = int(price)
                 price = new_price
-                row["Quantity"] = price
+                row["Price"] = price
 
         # write the updated data to the CSV file
         with open('user_input.csv', "w", newline="") as file:
@@ -148,6 +242,7 @@ class Store:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
+        cls.another()
 
     @classmethod
     def delete_product(cls):
@@ -159,6 +254,14 @@ class Store:
         print(tabulate(rows, headers='keys', tablefmt="fancy_grid", colalign=("left",)))
 
         product_id = input("Enter Product ID: ")
+        with open('user_input.csv', 'r') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[0] == str(product_id):
+                    break
+            if row[0] != str(product_id):
+                print("Product ID not found.Please try existing ID")
+                cls.delete_product()
         with open('user_input.csv', "r") as file:
             reader = csv.DictReader(file)
             rows = list(reader)
@@ -170,6 +273,20 @@ class Store:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
+        cls.another()
+
+    @classmethod
+    def another(cls):
+        transaction = True
+        while transaction:
+            want = input("Do you want any other transaction???\n"
+                         "Enter Y/y for yes "
+                         "or any other key to break\n"
+                         "Enter: ")
+            if want == "y" or want == "Y":
+                Buyer.owner()
+            else:
+                sys.exit()
 
 
 class Buyer(Store):
@@ -203,54 +320,30 @@ class Buyer(Store):
     def owner(cls):
         # Code to run for owner
         print("Welcome owner!")
-        type2 = int(input("What do you want do? \n\t"
-                          "1. Available Products\n\t"
-                          "2. Add  New Products\n\t"
-                          "3. Update Product Quantity\n\t"
-                          "4. Remove Product Quantity\n\t"
-                          "5. Update Product Price\n\t"
-                          "6. Delete Product \n\t"
-                          "7. Exit\n"
-                          "Enter your choice: "))
+        type2 = ''
+        try:
+            type2 = int(input("What do you want do? \n\t"
+                              "1. Available Products\n\t"
+                              "2. Add  New Products\n\t"
+                              "3. Update Product Quantity\n\t"
+                              "4. Remove Product Quantity\n\t"
+                              "5. Update Product Price\n\t"
+                              "6. Delete Product \n\t"
+                              "7. Exit\n"
+                              "Enter your choice: "))
+        except:
+            print("Invalid input. Only Numeric value is allowed.")
+            cls.owner()
 
         if type2 == 1:
-            type3 = int(input("We have two types of products available :\n\t"
-                              "1. Phones\n\t"
-                              "2. Accessories\n\t"
-                              "3. Exit\n"
-                              "Enter your choice: "))
-            rows = []
-            if type3 == 1:
-                with open('user_input.csv', 'r') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        rows.append(row)
-
-                # Use filter function to filter rows with age 21
-                phone_filter = list(filter(lambda x: x["Category"] == "phone", rows))
-                print(tabulate(phone_filter, headers='keys', tablefmt="fancy_grid", colalign=("left",)))
-                while True:
-                    event = keyboard.read_event()
-                    if event.event_type == 'down' and event.name == 'esc':
-                        cls.owner()
-            elif type3 == 2:
-                with open('user_input.csv', 'r') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        rows.append(row)
-
-                # Use filter function
-                accessories_filter = list(filter(lambda x: x["Category"] == "accessories", rows))
-                print(tabulate(accessories_filter, headers='keys', tablefmt="fancy_grid", colalign=("left",)))
-
-            elif type3 == 3:
-                sys.exit()
+            Store.available_product()
         elif type2 == 2:
             Store.add_product()
             print("\nNew Product Added")
         elif type2 == 3:
             Store.update_product_quantity()
             print("\nProduct Quantity updated")
+            Store.another()
         elif type2 == 4:
             Store.remove_product_quantity()
             print("\nProduct Quantity updated")
@@ -262,6 +355,9 @@ class Buyer(Store):
             print("\nProduct Deleted")
         elif type2 == 7:
             sys.exit()
+        else:
+            print("\nInvalid input. Please enter the above mentioned number...!\n")
+            cls.owner()
 
 
 class Customer(Store):
@@ -355,7 +451,6 @@ class Customer(Store):
                 else:
 
                     data.append(row)
-            # print("Product not found")
 
             if not found:
                 while not found:
@@ -376,13 +471,12 @@ class Customer(Store):
                     while True:
                         try:
                             if keyboard.is_pressed('Esc'):
-                                print("\nyou pressed Esc, so exiting...")
-                                # sys.exit(0)
                                 Customer.choice()
-
+                            if keyboard.is_pressed('ENTER'):
+                                break
                         except:
                             break
-                        continue
+                    sys.exit()
 
                 else:
                     print("Invalid input")
@@ -399,6 +493,17 @@ class Customer(Store):
 
             # writing data rows
             writer.writerows(data)
+
+        transaction = True
+        while transaction:
+            want = input("Do you want any other transaction???\n"
+                         "Enter Y/y for yes "
+                         "or any other key to break\n"
+                         "Enter: ")
+            if want == "y" or want == "Y":
+                Customer.choice()
+            else:
+                sys.exit()
 
 
 def main():
